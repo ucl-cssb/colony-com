@@ -40,11 +40,13 @@ def main():
     plate.add_species(n)
 
     ## add strain to the plate
+    positions = [3/1, 3/2]
     U_p = np.zeros(environment_size)
-    for r in np.arange(3./w, -0.001/w, -1):
-        for i in np.arange((dim/2) - r, (dim/2) + r):
-            for j in np.arange((dim / 2) - r, (dim / 2) + r):
-                U_p[int(i), int(j)] = 2 * np.exp(-(r*w) ** 2 / 4) * 10 ** 8
+    for p in positions:
+        for r in np.arange(3./w, -0.001/w, -1):
+            for i in np.arange((dim/p) - r, (dim/p) + r):
+                for j in np.arange((dim / 2) - r, (dim / 2) + r):
+                    U_p[int(i), int(j)] = 2 * np.exp(-(r*w) ** 2 / 4) * 10 ** 8
 
     #U_p[50, 50] = 2E8
     p = Species("p", U_p)
@@ -75,34 +77,34 @@ def main():
     ## run the experiment
     params = (w, D_p, D_p0, D_h, D_n, gamma, beta, m, n_0, k_n, K_n, K_h, alpha)
     sim = plate.run(t_final=2000,
-                    dt=20,
+                    dt=10,
                     params=params)
 
     ## plotting
     plate.plot_simulation(sim, 10)
 
-    ## make video of P over time
-    import matplotlib.pyplot as plt
-    import matplotlib.animation as animation
-    from matplotlib import cm
-
-    plate_view = sim[1]
-
-    fig, ax = plt.subplots()
-    plt.axis('off')
-    ims = []
-    for idx in range(plate_view.shape[2]):
-        im = ax.imshow(plate_view[:, :, idx],
-                       interpolation="none",
-                       cmap=cm.gist_gray,
-                       vmin=0,
-                       vmax=np.max(plate_view),
-                       animated=True)
-        ims.append([im])
-
-    ani = animation.ArtistAnimation(fig, ims, interval=5000/len(ims), blit=True,
-                                    repeat_delay=1000)
-    ani.save("movie_repressed_taxis.mp4")
+    # ## make video of P over time
+    # import matplotlib.pyplot as plt
+    # import matplotlib.animation as animation
+    # from matplotlib import cm
+    #
+    # plate_view = sim[1]
+    #
+    # fig, ax = plt.subplots()
+    # plt.axis('off')
+    # ims = []
+    # for idx in range(plate_view.shape[2]):
+    #     im = ax.imshow(plate_view[:, :, idx],
+    #                    interpolation="none",
+    #                    cmap=cm.gist_gray,
+    #                    vmin=0,
+    #                    vmax=np.max(plate_view),
+    #                    animated=True)
+    #     ims.append([im])
+    #
+    # ani = animation.ArtistAnimation(fig, ims, interval=5000/len(ims), blit=True,
+    #                                 repeat_delay=1000)
+    # ani.save("movie_repressed_taxis.mp4")
 
 
 main()
