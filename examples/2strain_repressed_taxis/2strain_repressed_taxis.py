@@ -42,13 +42,13 @@ def main():
     plate.add_species(n)
 
     ## add leader strain to the plate
-    positions = [1.9]
+    positions = [2]
     U_p = np.zeros(environment_size)
     for p in positions:
         for r in np.arange(3./w, -0.001/w, -1):
             for i in np.arange((dim/p) - r, (dim/p) + r):
                 for j in np.arange((dim / 2) - r, (dim / 2) + r):
-                    U_p[int(i), int(j)] = 2 * np.exp(-(r*w) ** 2 / 4) * 5e7
+                    U_p[int(i), int(j)] = 2 * np.exp(-(r*w) ** 2 / 4) * 6e7
 
     #U_p[50, 50] = 2E8
     p = Species("p", U_p)
@@ -63,13 +63,13 @@ def main():
     plate.add_species(p)
 
     ## add follower strain to the plate
-    positions = [2.1]
+    positions = [2]
     U_f = np.zeros(environment_size)
     for p in positions:
         for r in np.arange(3./w, -0.001/w, -1):
             for i in np.arange((dim/p) - r, (dim/p) + r):
                 for j in np.arange((dim / 2) - r, (dim / 2) + r):
-                    U_f[int(i), int(j)] = 2 * np.exp(-(r*w) ** 2 / 4) * 5e7
+                    U_f[int(i), int(j)] = 2 * np.exp(-(r*w) ** 2 / 4) * 4e7
 
     #U_p[50, 50] = 2E8
     f = Species("f", U_f)
@@ -106,7 +106,7 @@ def main():
     h2.set_behaviour(h2_behaviour)
     plate.add_species(h2)
 
-    plate.plot_plate()
+    # plate.plot_plate()
 
     ## run the experiment
     params = (w, D_p, D_p0, D_h, D_n, gamma, beta, m, n_0, k_n, K_n, K_h, alpha)
@@ -115,30 +115,33 @@ def main():
                     params=params)
 
     ## plotting
-    plate.plot_simulation(sim, 2, cols=2)
+    # plate.plot_simulation(sim, 2, cols=2)
 
     ## make video of P over time
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from matplotlib import cm
 
-    plate_view = sim[1]
+    blank = np.zeros(sim[1].shape)
+    plate_view = np.stack((sim[1], sim[2], blank), axis=-1)
+    plate_view = plate_view / np.max(plate_view)
+    # plate_view = sim[1]
 
     fig, ax = plt.subplots()
     plt.axis('off')
     ims = []
     for idx in range(plate_view.shape[2]):
-        im = ax.imshow(plate_view[:, :, idx],
+        im = ax.imshow(plate_view[:, :, idx, :],
                        interpolation="none",
-                       cmap=cm.gist_gray,
-                       vmin=0,
-                       vmax=np.max(plate_view),
+                       # cmap=cm.gist_gray,
+                       # vmin=0,
+                       # vmax=np.max(plate_view),
                        animated=True)
         ims.append([im])
 
     ani = animation.ArtistAnimation(fig, ims, interval=5000/len(ims), blit=True,
                                     repeat_delay=1000)
-    ani.save("movie_repressed_taxis_2strains_asymmetric.mp4")
+    ani.save("movie_repressed_taxis_2strains_symmetric_rgb.mp4")
 
 
 main()
