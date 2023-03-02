@@ -6,13 +6,13 @@ import helper_functions
 
 def main():
     ## experimental parameters
-    D = 3E-3        # nutrient diffusion coeff (#mm2/min)
-    rho_n = 0.3     # consumption rate of nutrients by X
-    rc = 6E-3       # growth rate of X on N
-    Dc = 1E-5       # cell diffusion coefficient
+    D = 3E-3  # nutrient diffusion coeff (#mm2/min)
+    rho_n = 0.3  # consumption rate of nutrients by X
+    rc = 6E-3  # growth rate of X on N
+    Dc = 1E-5  # cell diffusion coefficient
     w = 1
     Da = 0.03
-    rho_A = 0.1       # production rate of AHL
+    rho_A = 0.1  # production rate of AHL
 
     environment_size = (20, 20)
     plate = Plate(environment_size)
@@ -20,11 +20,13 @@ def main():
     ## add nutrient to the plate
     U_N = np.ones(environment_size)
     N = Species("N", U_N)
-    def N_behaviour(species, params):
+
+    def N_behaviour(t, species, params):
         ## unpack params
         D, rho_n, Dc, rc, w = params
         n = D * helper_functions.ficks(species['N'], w) - rho_n * species['N'] * species['X']
         return n
+
     N.set_behaviour(N_behaviour)
     plate.add_species(N)
 
@@ -41,22 +43,24 @@ def main():
     cols = X_coordinates[:, 1]
     U_X[rows, cols] = 0.001
     strain = Species("X", U_X)
-    def X_behaviour(species, params):
+
+    def X_behaviour(t, species, params):
         ## unpack params
         D, rho_n, Dc, rc, w = params
         x = Dc * helper_functions.ficks(species['X'], w) + rc * species['N'] * species['X']
         return x
+
     strain.set_behaviour(X_behaviour)
     plate.add_species(strain)
 
     ## run the experiment
     params = (D, rho_n, Dc, rc, w)
-    sim = plate.run(t_final = 1000,
-                    dt = .1,
-                    params = params)
+    sim = plate.run(t_final=1000,
+                    dt=.1,
+                    params=params)
 
     ## plotting
-    tp = np.arange(0, 18, 2)
-    plate.plot_simulation(sim, tp)
+    plate.plot_simulation(sim, 10)
+
 
 main()
