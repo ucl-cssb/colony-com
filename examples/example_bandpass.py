@@ -159,7 +159,7 @@ def main():
                     params=params)
 
     ## plotting
-    plate.plot_simulation(sim, 7, 'log10', 2)
+    plate.plot_simulation(sim, 7, 'log10')
 
     ## calculate total GFP (rather than GFP per cell) = X * GFP
     plate_view = sim[1] * sim[3]
