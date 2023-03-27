@@ -77,7 +77,17 @@ class Plate:
 
         return sim_ivp
 
-    def plot_simulation(self, sim, num_timepoints, scale='linear', cols=3):
+    def plot_simulation(self, sim, num_timepoints, scale='linear', scale_range='fixed', cols=3):
+        """
+        plots the simulated species at equally spaced timepoints
+
+        args: sim: The 4-dimensional ndarray simulation output num_timepoints: The number of timepoints to plot.
+        Equally spaced timepoints are calculated. scale: The scaling of the colourmap for the species: 'linear' or
+        'log10' are the only ones allowed currently. scale_range: 'dynamic' or 'fixed'. If 'fixed', the same range
+        for the colourmap is used for all timepoints, for 'dynamic' a new range is calculated for each timepoint.
+        cols: the number of columns to use for arranging the subplots of each species.
+
+        """
         tps = np.linspace(0, sim.shape[3] - 1, num_timepoints)
         for tp in tps:
             tp = int(tp)
@@ -88,14 +98,31 @@ class Plate:
 
             for idx in range(len(self.species)):
                 ax = fig.add_subplot(gs[idx])
+
                 if scale == "log10":
+                    if scale_range == 'fixed':
+                        scale_min = np.min(np.log10(sim[idx, :, :, :]))
+                        scale_max = np.max(np.log10(sim[idx, :, :, :]))
+                    elif scale_range == 'dynamic':
+                        scale_min = np.min(np.log10(sim[idx, :, :, tp]))
+                        scale_max = np.max(np.log10(sim[idx, :, :, tp]))
+
                     im = ax.imshow(np.log10(sim[idx, :, :, tp]), interpolation="none",
-                                         cmap=cm.viridis, vmin=np.min(np.log10(sim[idx, :, :, :])),
-                                   vmax=np.max(np.log10(sim[idx, :, :, :])))
+                                   cmap=cm.viridis,
+                                   vmin=scale_min,
+                                   vmax=scale_max)
                 elif scale == "linear":
+                    if scale_range == 'fixed':
+                        scale_min = 0
+                        scale_max = np.max(sim[idx, :, :, :])
+                    elif scale_range == 'dynamic':
+                        scale_min = np.min(sim[idx, :, :, tp])
+                        scale_max = np.max(sim[idx, :, :, tp])
+
                     im = ax.imshow(sim[idx, :, :, tp], interpolation="none",
-                                   cmap=cm.viridis, vmin=0,
-                                   vmax=np.max(sim[idx, :, :, :]))
+                                   cmap=cm.viridis,
+                                   vmin=scale_min,
+                                   vmax=scale_max)
 
                 ax.set_title(self.species[idx].get_name() + ' : ' + str(tp))
 
@@ -104,7 +131,7 @@ class Plate:
                 fig.colorbar(im, cax=cax, shrink=0.8)
 
             plt.subplots_adjust(wspace=0.6)
-            fig.savefig('fig_' + str(tp) +'.png')
+            fig.savefig('fig_' + str(tp) + '.png')
 
             fig.show()
 
