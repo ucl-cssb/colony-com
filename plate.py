@@ -1,9 +1,12 @@
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib import gridspec
+from matplotlib import colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from scipy.integrate import solve_ivp
+import helper_functions
+
 
 
 class Plate:
@@ -76,6 +79,49 @@ class Plate:
                                     len(t))
 
         return sim_ivp
+
+    def plot_simulation_3D(self, sim, num_timepoints, cols=3):
+        """
+        plots the simulated species at equally spaced timepoints
+
+        args: sim: The 4-dimensional ndarray simulation output num_timepoints: The number of timepoints to plot.
+        Equally spaced timepoints are calculated. scale: The scaling of the colourmap for the species: 'linear' or
+        'log10' are the only ones allowed currently. scale_range: 'dynamic' or 'fixed'. If 'fixed', the same range
+        for the colourmap is used for all timepoints, for 'dynamic' a new range is calculated for each timepoint.
+        cols: the number of columns to use for arranging the subplots of each species.
+
+        """
+        tps = np.linspace(0, sim.shape[3] - 1, num_timepoints)
+        for tp in tps:
+            tp = int(tp)
+
+            rows = int(np.ceil(len(self.species) / cols))
+            gs = gridspec.GridSpec(rows, cols)
+            fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+            for idx in range(len(self.species)):
+                # ax = axs(gs[idx])
+
+                Z = sim[idx, :, :, tp]
+                X, Y = np.meshgrid(np.arange(0, self.size[0], 1),
+                                   np.arange(0, self.size[1], 1))
+
+                surf = ax.plot_surface(X, Y, Z,
+                                       cmap=cm.coolwarm,
+                                       norm=colors.TwoSlopeNorm(vmin=0, vcenter=1, vmax=1000),
+                                       linewidth=0,
+                                       antialiased=False)
+                ax.set_zlim(0, 5)
+                # ax.set_title(self.species[idx].get_name() + ' : ' + str(tp))
+
+                # divider = make_axes_locatable(ax)
+                # cax = divider.append_axes("right", size="5%", pad=0.05)
+                fig.colorbar(surf, shrink=0.5)
+
+            plt.subplots_adjust(wspace=0.6)
+            fig.savefig('fig_' + str(tp) + '.png')
+
+            # fig.show()
 
     def plot_simulation(self, sim, num_timepoints, scale='linear', scale_range='fixed', cols=3):
         """
