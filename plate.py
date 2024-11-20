@@ -31,6 +31,7 @@ class Plate:
             return None
 
     def get_all_species_U(self):
+        # size of U is nspecies x env_size_x x env_size_y
         U = np.zeros((self.get_num_species(), self.size[0], self.size[1]))
         for idx, s in enumerate(self.species):
             U[idx] = s.get_U()
@@ -64,9 +65,10 @@ class Plate:
 
     def run(self, t_final, dt, params):
         ## get timepoints
-        t = np.arange(0, t_final, dt)
+        t = np.arange(0, t_final+dt, dt)
 
         ## flatten all species U matrix (solver takes state as a vector not matrix)
+        print(self.get_all_species_U().shape)
         U_init = self.get_all_species_U().flatten()
 
         ## numerically solve model
@@ -200,3 +202,41 @@ class Plate:
 
         fig.savefig('fig_setup.png')
         fig.show()
+
+    def plot_timecourse(self, sim, species, pos, figname, type='s'):
+
+        if type == 's':
+            fig, ax = plt.subplots(nrows=len(pos), ncols=1, figsize=(8, 3*len(pos)))  # create figure & 1 axis with specified size
+            for i, xy in enumerate(pos):
+                signal = sim[species, xy[0]-1, xy[1]-1, :]
+                ax[i].plot(signal)
+                ax[i].set_title(str(xy))
+                ax[i].set_ylabel("signal")
+                ax[i].set_xlabel("time")
+
+            # make all y axes the same, given by maximum signal at last timepoint
+            max_signal = np.max(sim[species, :, :, :])
+            #print(max_signal)
+            #print(np.max(sim.shape[3]))
+            for i in range(len(pos)):
+                ax[i].set_ylim([0, max_signal*1.05])
+                ax[i].set_xlim([0, sim.shape[3]]) #Todo: this assumes time steps in hours
+
+            fig.tight_layout()
+            fig.savefig(figname)
+
+        if type == 'o':
+            # create the same plot but overlay the time series
+            fig, ax = plt.subplots(figsize=(8, 3))
+            for i, xy in enumerate(pos):
+                signal = sim[species, xy[0]-1, xy[1]-1, :]
+                ax.plot(signal, label=str(xy))
+                ax.legend()
+                ax.set_ylim([0, np.max(sim[species, :, :, :])*1.05])
+                ax.set_xlim([0, sim.shape[3]])
+                ax.set_ylabel("signal")
+                ax.set_xlabel("time")
+
+            fig.tight_layout()
+            fig.savefig(figname)    
+        
